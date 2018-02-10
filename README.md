@@ -1,1 +1,1 @@
-# hands-dc-wgan
+# hand-wgan
