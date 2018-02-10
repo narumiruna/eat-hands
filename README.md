@@ -4,7 +4,8 @@
 - [11k Hands](https://sites.google.com/view/11khands)
 
 ## Result
-![](https://i.imgur.com/G69DZKE.jpg)
+![](https://i.imgur.com/Jxh5JlT.png)
+![](https://i.imgur.com/xrjwF3n.jpg)
 
 ## References
 
