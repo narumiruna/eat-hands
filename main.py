@@ -23,7 +23,6 @@ parser.add_argument('--epochs', type=int, default=200)
 parser.add_argument('--log-interval', type=int, default=10)
 parser.add_argument('--no-cuda', action='store_true')
 parser.add_argument('-c', type=float, default=0.01)
-parser.add_argument('--instance-norm', action='store_true')
 args = parser.parse_args()
 print(args)
 
@@ -47,12 +46,7 @@ hand_loader = data.DataLoader(Hands(args.data_dir,
                               num_workers=args.workers)
 
 d = Discriminator(args.channels)
-if args.instance_norm:
-    g = Generator(args.channels,
-                  normalization=nn.InstanceNorm2d)
-    print('Use instance normalization.')
-else:
-    g = Generator(args.channels)
+g = Generator(args.channels)
 
 if use_cuda:
     d.cuda()
