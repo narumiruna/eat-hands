@@ -1,5 +1,3 @@
-
-
 from torch.utils import data
 import pandas as pd
 from os.path import join
@@ -28,22 +26,3 @@ class Hands(data.Dataset):
 
     def __len__(self):
         return len(self.image_names)
-
-
-def main():
-
-    from torchvision import transforms
-    transform = transforms.Compose([
-        transforms.Resize(64),
-        transforms.CenterCrop(64),
-        transforms.ToTensor(),
-        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
-    ])
-    dst = Hands('data', transform=transform)
-    loader = data.DataLoader(dst, batch_size=50, shuffle=True)
-    for i, x in enumerate(loader):
-        print(x.size())
-
-
-if __name__ == '__main__':
-    main()
