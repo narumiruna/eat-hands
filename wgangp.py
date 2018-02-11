@@ -14,7 +14,7 @@ from dataset import Hands
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--data-dir', type=str, default='data')
-parser.add_argument('--image-dir', '-d', type=str, default='wgan')
+parser.add_argument('--image-dir', '-d', type=str, default='wgangp')
 parser.add_argument('--batch-size', '-bs', type=int, default=128)
 parser.add_argument('--learning-rate', '-lr', type=float, default=2e-4)
 parser.add_argument('--channels', type=int, default=128)
