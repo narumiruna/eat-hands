@@ -4,7 +4,7 @@ import glob
 
 import torch
 from torch import nn
-from torch.autograd import Variable
+from torch.autograd import Variable, grad
 from torch.utils import data
 from torchvision import datasets, transforms
 from torchvision.utils import save_image
