@@ -16,7 +16,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--data-dir', type=str, default='data')
 parser.add_argument('--image-dir', '-d', type=str, default='wgangp')
 parser.add_argument('--batch-size', '-bs', type=int, default=128)
-parser.add_argument('--learning-rate', '-lr', type=float, default=2e-4)
+parser.add_argument('--learning-rate', '-lr', type=float, default=1e-4)
 parser.add_argument('--channels', type=int, default=128)
 parser.add_argument('--workers', type=int, default=0)
 parser.add_argument('--epochs', type=int, default=200)
@@ -52,10 +52,12 @@ if use_cuda:
     d.cuda()
     g.cuda()
 
-optimizer_d = torch.optim.RMSprop(d.parameters(),
-                                  lr=args.learning_rate)
-optimizer_g = torch.optim.RMSprop(g.parameters(),
-                                  lr=args.learning_rate)
+optimizer_d = torch.optim.Adam(d.parameters(),
+                               lr=args.learning_rate,
+                               betas=(0, 0.9))
+optimizer_g = torch.optim.Adam(g.parameters(),
+                               lr=args.learning_rate,
+                               betas=(0, 0.9))
 
 losses_d = []
 losses_g = []
