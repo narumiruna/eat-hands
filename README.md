@@ -5,11 +5,6 @@
 
 ## Result
 
-### WGAN
-
-![](https://i.imgur.com/mALbOuG.png)
-![](https://i.imgur.com/zS09f5s.jpg)
-
 ### WGAN-GP
 ![](https://i.imgur.com/Ce5qHdb.png)
 ![](https://i.imgur.com/JUgQBmC.jpg)
