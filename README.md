@@ -10,4 +10,5 @@
 ## References
 
 - [WGAN](https://arxiv.org/abs/1701.07875)
+- [WGAN-GP](https://arxiv.org/abs/1704.00028)
 - [DCGAN](https://arxiv.org/abs/1511.06434)
