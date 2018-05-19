@@ -14,7 +14,7 @@ from dataset import Hands
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--data-dir', type=str, default='data')
-parser.add_argument('--image-dir', '-d', type=str, default='wgangp')
+parser.add_argument('--output-dir', '-d', type=str, default='results')
 parser.add_argument('--batch-size', '-bs', type=int, default=128)
 parser.add_argument('--learning-rate', '-lr', type=float, default=1e-4)
 parser.add_argument('--channels', type=int, default=128)
@@ -26,7 +26,7 @@ parser.add_argument('--penalty-coefficient', type=int, default=10)
 args = parser.parse_args()
 print(args)
 
-os.makedirs(args.image_dir, exist_ok=True)
+os.makedirs(args.output_dir, exist_ok=True)
 
 device = torch.device('cuda' if torch.cuda.is_available() and not args.no_cuda
                       else 'cpu')
@@ -106,8 +106,6 @@ def train(epoch):
                 'g loss', float(loss_g.data)))
             plot_losses()
 
-    plot_samples(epoch)
-
 
 def plot_losses():
     import matplotlib
@@ -120,21 +118,22 @@ def plot_losses():
     ax[1].plot(losses_g, c='b', label='g loss')
     ax[1].legend()
 
-    fig.savefig(os.path.join(args.image_dir, 'losses.png'))
+    fig.savefig(os.path.join(args.output_dir, 'losses.png'))
     plt.close(fig)
 
 
-def plot_samples(epoch):
+def plot_sample(epoch):
     g.eval()
 
     with torch.no_grad():
         z = torch.randn(16 * 16, 100).to(device)
         fake = g(z)
 
-    filename = os.path.join(args.image_dir, 'samples_epoch_{}.jpg'.format(
-        str(epoch).zfill(3)))
+    filename = os.path.join(args.output_dir,
+                            'samples_{:03d}.jpg'.format(epoch + 1))
     save_image(fake.data, filename, normalize=True, nrow=16)
 
 
 for epoch in range(args.epochs):
     train(epoch)
+    plot_sample(epoch)
