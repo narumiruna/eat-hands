@@ -44,20 +44,20 @@ hand_loader = data.DataLoader(
     shuffle=True,
     num_workers=args.workers)
 
-d = Discriminator(args.channels).to(device)
-g = Generator(args.channels).to(device)
+net_d = Discriminator(args.channels).to(device)
+net_g = Generator(args.channels).to(device)
 
 optimizer_d = torch.optim.Adam(
-    d.parameters(), lr=args.learning_rate, betas=(0, 0.9))
+    net_d.parameters(), lr=args.learning_rate, betas=(0, 0.9))
 optimizer_g = torch.optim.Adam(
-    g.parameters(), lr=args.learning_rate, betas=(0, 0.9))
+    net_g.parameters(), lr=args.learning_rate, betas=(0, 0.9))
 
 losses_d = []
 losses_g = []
 
 
 def train(epoch):
-    g.train()
+    net_g.train()
 
     for i, x in enumerate(hand_loader):
         # train discriminator
@@ -67,20 +67,20 @@ def train(epoch):
         epsilon = torch.rand(x.size(0), 1, 1, 1).to(device)
         grad_outputs = torch.ones(x.size(0)).to(device)
 
-        x_fake = g(z).detach()
+        x_fake = net_g(z).detach()
         interpolates = torch.tensor(
             epsilon * x + (1 - epsilon) * x_fake, requires_grad=True).to(device)
 
         gradients = grad(
-            d(interpolates),
+            net_d(interpolates),
             interpolates,
             grad_outputs=grad_outputs,
             create_graph=True)[0]
         gradient_penalty = (
             gradients.view(x.size(0), -1).norm(2, dim=1) - 1).pow(2)
 
-        loss_d = d(x_fake).mean() \
-               - d(x).mean() \
+        loss_d = net_d(x_fake).mean() \
+               - net_d(x).mean() \
                + args.penalty_coefficient * gradient_penalty.mean()
 
         optimizer_d.zero_grad()
@@ -90,7 +90,7 @@ def train(epoch):
         # train generator
         z = torch.randn(x.size(0), 100).to(device)
 
-        loss_g = -d(g(z)).mean()
+        loss_g = -net_d(net_g(z)).mean()
 
         optimizer_g.zero_grad()
         loss_g.backward()
@@ -123,11 +123,11 @@ def plot_losses():
 
 
 def plot_sample(epoch):
-    g.eval()
+    net_g.eval()
 
     with torch.no_grad():
         z = torch.randn(16 * 16, 100).to(device)
-        fake = g(z)
+        fake = net_g(z)
 
     filename = os.path.join(args.output_dir,
                             'samples_{:03d}.jpg'.format(epoch + 1))
