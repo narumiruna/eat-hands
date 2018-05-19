@@ -13,7 +13,8 @@ class Hands(data.Dataset):
         self.transform = transform
 
         df = pd.read_csv(join(root, self.info_file))
-        self.image_names = df[df.aspectOfHand == aspect_of_hand].imageName.values.tolist()
+        self.image_names = df[df.aspectOfHand ==
+                              aspect_of_hand].imageName.values.tolist()
 
     def __getitem__(self, index):
         path = join(self.root, self.img_folder, self.image_names[index])
