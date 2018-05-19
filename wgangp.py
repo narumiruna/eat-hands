@@ -4,7 +4,7 @@ import glob
 
 import torch
 from torch import nn
-from torch.autograd import Variable, grad
+from torch.autograd import grad
 from torch.utils import data
 from torchvision import datasets, transforms
 from torchvision.utils import save_image
@@ -28,9 +28,8 @@ print(args)
 
 os.makedirs(args.image_dir, exist_ok=True)
 
-use_cuda = torch.cuda.is_available() and not args.no_cuda
-if use_cuda:
-    print("Use CUDA.")
+device = torch.device('cuda' if torch.cuda.is_available() and not args.no_cuda
+                      else 'cpu')
 
 transform = transforms.Compose([
     transforms.Resize(64),
@@ -39,69 +38,59 @@ transform = transforms.Compose([
     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
 ])
 
-hand_loader = data.DataLoader(Hands(args.data_dir,
-                                    transform=transform),
-                              batch_size=args.batch_size,
-                              shuffle=True,
-                              num_workers=args.workers)
+hand_loader = data.DataLoader(
+    Hands(args.data_dir, transform=transform),
+    batch_size=args.batch_size,
+    shuffle=True,
+    num_workers=args.workers)
 
-d = Discriminator(args.channels)
-g = Generator(args.channels)
+d = Discriminator(args.channels).to(device)
+g = Generator(args.channels).to(device)
 
-if use_cuda:
-    d.cuda()
-    g.cuda()
-
-optimizer_d = torch.optim.Adam(d.parameters(),
-                               lr=args.learning_rate,
-                               betas=(0, 0.9))
-optimizer_g = torch.optim.Adam(g.parameters(),
-                               lr=args.learning_rate,
-                               betas=(0, 0.9))
+optimizer_d = torch.optim.Adam(
+    d.parameters(), lr=args.learning_rate, betas=(0, 0.9))
+optimizer_g = torch.optim.Adam(
+    g.parameters(), lr=args.learning_rate, betas=(0, 0.9))
 
 losses_d = []
 losses_g = []
+
 
 def train(epoch):
     g.train()
 
     for i, x in enumerate(hand_loader):
         # train discriminator
-        x = Variable(x)
-        z = Variable(torch.randn(len(x), 100))
+        x = x.to(device)
+        z = torch.randn(x.size(0), 100).to(device)
 
-        epsilon = Variable(torch.rand(len(x), 1, 1, 1))
-        grad_outputs = Variable(torch.ones(len(x)))
-
-        if use_cuda:
-            x = x.cuda()
-            z = z.cuda()
-            epsilon = epsilon.cuda()
-            grad_outputs = grad_outputs.cuda()
+        epsilon = torch.rand(x.size(0), 1, 1, 1).to(device)
+        grad_outputs = torch.ones(x.size(0)).to(device)
 
         x_fake = g(z).detach()
-        interpolates = epsilon * x + (1 - epsilon) * x_fake
-        interpolates.requires_grad = True
+        interpolates = torch.tensor(
+            epsilon * x + (1 - epsilon) * x_fake, requires_grad=True).to(device)
 
-        gradients = grad(d(interpolates),
-                         interpolates,
-                         grad_outputs=grad_outputs,
-                         create_graph=True)[0]
-        gradient_penalty = (gradients.view(len(x), -1).norm(2, dim=1) - 1).pow(2)
+        gradients = grad(
+            d(interpolates),
+            interpolates,
+            grad_outputs=grad_outputs,
+            create_graph=True)[0]
+        gradient_penalty = (
+            gradients.view(x.size(0), -1).norm(2, dim=1) - 1).pow(2)
 
-        loss_d = d(x_fake).mean() - d(x).mean() + args.penalty_coefficient * gradient_penalty.mean()
+        loss_d = d(x_fake).mean() \
+               - d(x).mean() \
+               + args.penalty_coefficient * gradient_penalty.mean()
 
         optimizer_d.zero_grad()
         loss_d.backward()
         optimizer_d.step()
 
         # train generator
-        z = Variable(torch.randn(len(x), 100))
+        z = torch.randn(x.size(0), 100).to(device)
 
-        if use_cuda:
-            z = z.cuda()
-
-        loss_g = - d(g(z)).mean()
+        loss_g = -d(g(z)).mean()
 
         optimizer_g.zero_grad()
         loss_g.backward()
@@ -113,13 +102,12 @@ def train(epoch):
 
         if i % args.log_interval == 0:
             print('{}: {}, {}: {}, {}: {:.4f}, {}: {:.4f}.'.format(
-                'Epoch', epoch,
-                'index', i,
-                'd loss:', float(loss_d.data),
+                'Epoch', epoch, 'index', i, 'd loss:', float(loss_d.data),
                 'g loss', float(loss_g.data)))
             plot_losses()
 
     plot_samples(epoch)
+
 
 def plot_losses():
     import matplotlib
@@ -139,12 +127,13 @@ def plot_losses():
 def plot_samples(epoch):
     g.eval()
 
-    z = Variable(torch.randn(16 * 16, 100), volatile=True)
-    if use_cuda:
-        z = z.cuda()
+    with torch.no_grad():
+        z = torch.randn(16 * 16, 100).to(device)
+        fake = g(z)
 
-    filename = os.path.join(args.image_dir, 'samples_epoch_{}.jpg'.format(str(epoch).zfill(3)))
-    save_image(g(z).data, filename, normalize=True, nrow=16)
+    filename = os.path.join(args.image_dir, 'samples_epoch_{}.jpg'.format(
+        str(epoch).zfill(3)))
+    save_image(fake.data, filename, normalize=True, nrow=16)
 
 
 for epoch in range(args.epochs):
